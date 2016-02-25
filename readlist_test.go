@@ -12,6 +12,7 @@ import (
 type listResponse struct {
 	Pagination bongo.PaginationInfo
 	Data       []map[string]interface{}
+//	Data       []map[string]Page
 }
 
 func TestReadList(t *testing.T) {
@@ -53,6 +54,7 @@ func TestReadList(t *testing.T) {
 			So(response.Pagination.TotalPages, ShouldEqual, 1)
 			So(response.Pagination.RecordsOnPage, ShouldEqual, 2)
 			So(len(response.Data), ShouldEqual, 2)
+			So(response.Data[0]["content"], ShouldEqual, "foo")
 		})
 		Convey("with query", func() {
 			endpoint.Factory = Factory
@@ -86,6 +88,7 @@ func TestReadList(t *testing.T) {
 			So(response.Pagination.TotalPages, ShouldEqual, 1)
 			So(response.Pagination.RecordsOnPage, ShouldEqual, 1)
 			So(len(response.Data), ShouldEqual, 1)
+			So(response.Data[0]["content"], ShouldEqual, "foo")
 		})
 //		Convey("readlist with middleware", func() {
 //			endpoint.Factory = Factory
