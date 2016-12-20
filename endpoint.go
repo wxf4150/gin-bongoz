@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 	"github.com/ant0ine/go-json-rest/rest"
+	ojson "encoding/json"
 )
 
 type SortConfig struct {
@@ -152,7 +153,7 @@ func (e *Endpoint) GetJRouters()(routes []*rest.Route){
 	if !e.DisableWrites {
 		route = rest.Post(e.Uri, e.HandleCreate)
 		routes = append(routes, route)
-		route = rest.Put(e.Uri + "/:id", e.HandleUpdate)
+		route = rest.Post(e.Uri + "/:id", e.HandleUpdate)
 		routes = append(routes, route)
 		route = rest.Delete(e.Uri + "/:id", e.HandleDelete)
 		routes = append(routes, route)
@@ -170,7 +171,7 @@ func (e *Endpoint) GetJRouters()(routes []*rest.Route){
 //func (e *Endpoint) GetRouter() *mux.Router {
 //	r := mux.NewRouter()
 //	e.registerRoutes(r)
-//	return r
+//	return rparsed
 //}
 //
 //func (e *Endpoint) registerRoutes(r *mux.Router) {
@@ -340,7 +341,7 @@ func (e *Endpoint) HandleReadList(w1 rest.ResponseWriter, req *rest.Request) {
 
 	httpResponse := &HTTPListResponse{pageInfo, response}
 
-	encoder := json.NewEncoder(w)
+	encoder := ojson.NewEncoder(w)
 	err = encoder.Encode(httpResponse)
 
 	if err != nil {
@@ -381,7 +382,7 @@ func (e *Endpoint) HandleReadOne(w1 rest.ResponseWriter, req *rest.Request) {
 
 	httpResponse := &HTTPSingleResponse{instance}
 
-	encoder := json.NewEncoder(w)
+	encoder := ojson.NewEncoder(w)
 	err = encoder.Encode(httpResponse)
 
 	if err != nil {
@@ -439,9 +440,10 @@ func (e *Endpoint) HandleCreate(w1 rest.ResponseWriter, req *rest.Request) {
 		return
 	}
 
+	e.Connection.Collection(e.CollectionName).FindById(obj.GetId(), obj)
 	httpResponse := &HTTPSingleResponse{obj}
 
-	encoder := json.NewEncoder(w)
+	encoder := ojson.NewEncoder(w)
 	w.WriteHeader(http.StatusCreated)
 	err = encoder.Encode(httpResponse)
 
@@ -525,7 +527,7 @@ func (e *Endpoint) HandleUpdate(w1 rest.ResponseWriter, req *rest.Request) {
 
 	httpResponse := &HTTPSingleResponse{instance}
 
-	encoder := json.NewEncoder(w)
+	encoder := ojson.NewEncoder(w)
 	err = encoder.Encode(httpResponse)
 
 	if err != nil {
