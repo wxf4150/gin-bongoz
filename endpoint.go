@@ -579,6 +579,8 @@ func (e *Endpoint) HandleDelete(w1 rest.ResponseWriter, req *rest.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		io.WriteString(w, NewErrorResponse(err).ToJSON())
 		return
+	}else{
+		w1.WriteJson("ok")
 	}
 
 }
