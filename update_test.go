@@ -15,7 +15,7 @@ func TestUpdate(t *testing.T) {
 	defer conn.Session.Close()
 
 	Convey("Update", t, func() {
-		endpoint := NewEndpoint("/api/pages", conn, "pages")
+		endpoint := NewEndpoint("/pages", conn, "pages")
 		Convey("basic", func() {
 			endpoint.Factory = Factory
 
@@ -39,19 +39,19 @@ func TestUpdate(t *testing.T) {
 			So(err, ShouldEqual, nil)
 
 			reader := strings.NewReader(string(marshaled))
-			req, _ := http.NewRequest("PUT", strings.Join([]string{"/api/pages", obj.Id.Hex()}, "/"), reader)
+			req, _ := http.NewRequest("POST", strings.Join([]string{"/api/pages", obj.Id.Hex()}, "/"), reader)
 			router.ServeHTTP(w, req)
 
-			response := &singleResponse{}
+			response := map[string]interface{}{}
 
 			So(w.Code, ShouldEqual, 200)
 
-			err = json.Unmarshal(w.Body.Bytes(), response)
+			err = json.Unmarshal(w.Body.Bytes(), &response)
 
 			So(err, ShouldEqual, nil)
 
-			So(response.Data["content"], ShouldEqual, "bar")
-			So(response.Data["intValue"], ShouldEqual, 5.0)
+			So(response["Content"], ShouldEqual, "bar")
+			So(response["IntValue"], ShouldEqual, 5.0)
 		})
 		Convey("validation errors", func() {
 			endpoint.Factory = ValidFactory
@@ -76,14 +76,14 @@ func TestUpdate(t *testing.T) {
 			So(err, ShouldEqual, nil)
 
 			reader := strings.NewReader(string(marshaled))
-			req, _ := http.NewRequest("PUT", strings.Join([]string{"/api/pages", obj.Id.Hex()}, "/"), reader)
+			req, _ := http.NewRequest("POST", strings.Join([]string{"/api/pages", obj.Id.Hex()}, "/"), reader)
 			router.ServeHTTP(w, req)
-			So(w.Code, ShouldEqual, 400)
-			So(w.Body.String(), ShouldEqual, "{\"errors\":[\"Content is required\"]}")
+			So(w.Code, ShouldEqual, 500)
+			So(w.Body.String(), ShouldEqual, "{\"Error\":\"Validation failed. (Content is required)\"}")
 		})
 
 		Reset(func() {
-			conn.Session.DB("dplservertest").DropDatabase()
+			conn.Session.DB("bongoz").DropDatabase()
 
 		})
 	})

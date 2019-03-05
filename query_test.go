@@ -7,8 +7,6 @@ import (
 	"net/http"
 	"net/url"
 	"testing"
-	// "time"
-	"github.com/ant0ine/go-json-rest/rest"
 )
 
 func TestQuery(t *testing.T) {
@@ -19,11 +17,9 @@ func TestQuery(t *testing.T) {
 		parsed, _ := url.Parse(`http://localhost:8000?_query={"_id":{"$oid":"5525444a91692844dbfef192"}}`)
 		// parsed, _ := url.Parse(`http://localhost:8000?_query=HgAAAANkYXRlABMAAAAJJGd0ZQDb7bVmSwEAAAAA`)
 
-		request := &rest.Request{
-			Request: &http.Request{URL: parsed,},
-		}
+		request :=&http.Request{URL: parsed,}
 
-		endpoint := NewEndpoint("/api/pages", conn, "pages")
+		endpoint := NewEndpoint("/pages", conn, "pages")
 		endpoint.AllowFullQuery = true
 		query, _ := endpoint.getQuery(request)
 

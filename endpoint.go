@@ -3,19 +3,40 @@ package bongoz
 import (
 	"errors"
 	"fmt"
-//	"github.com/gorilla/mux"
-//	"github.com/justinas/alice"
-	"github.com/maxwellhealth/bongo"
-	"github.com/maxwellhealth/go-enhanced-json"
-	"gopkg.in/mgo.v2/bson"
-	"io"
+	"github.com/go-bongo/bongo"
+	"github.com/globalsign/mgo/bson"
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
-	"github.com/ant0ine/go-json-rest/rest"
-	ojson "encoding/json"
+	"encoding/json"
+	"github.com/gin-gonic/gin"
 )
+
+type ApiErr struct{
+	Error string
+}
+type ApiOk struct{
+	Msg string `example:"ok"`
+}
+
+func ErrJson(c *gin.Context,msg string){
+	if strings.HasPrefix( msg,"401"){
+		c.JSON(401, ApiErr{msg})
+		return
+	}
+	c.JSON(500, ApiErr{msg})
+}
+func OkJson(c *gin.Context,err error){
+	if err!=nil{
+		ErrJson(c,err.Error())
+	}else{
+		c.JSON(200, ApiOk{"ok"})
+	}
+}
+func MsgJson(c *gin.Context,msg string){
+	c.JSON(200, ApiOk{msg})
+}
+
 
 type SortConfig struct {
 	Field     string
@@ -112,57 +133,23 @@ func NewEndpoint(uri string, connection *bongo.Connection, collectionName string
 	return endpoint
 }
 
-func methodsFromMethod(method string) []string {
-	if method == "*" || method == "all" {
-		return []string{"ReadOne", "ReadList", "Create", "Update", "Delete"}
-	} else if method == "write" {
-		return []string{"Create", "Update", "Delete"}
-	} else if method == "read" {
-		return []string{"ReadOne", "ReadList"}
-	} else {
-		return []string{method}
-	}
-}
-
-//func (e *Endpoint) SetMiddleware(method string, chain alice.Chain) *Endpoint {
-//	methods := methodsFromMethod(method)
-//	for _, m := range methods {
-//		switch m {
-//		case "ReadOne":
-//			e.Middleware.ReadOne = chain
-//		case "ReadList":
-//			e.Middleware.ReadList = chain
-//		case "Create":
-//			e.Middleware.Create = chain
-//		case "Update":
-//			e.Middleware.Update = chain
-//		case "Delete":
-//			e.Middleware.Delete = chain
-//
-//		}
-//	}
-//	return e
-//}
-
-func (e *Endpoint) GetJRouters()(routes []*rest.Route){
-	route:=rest.Get(e.Uri,e.HandleReadList)
-	routes=append(routes,route)
-	route=rest.Get(e.Uri+"/:id",e.HandleReadOne)
-	routes=append(routes,route)
-
+func (e *Endpoint) Register(r *gin.RouterGroup) {
+	r.GET(e.Uri,e.HandleReadList)
+	r.GET(e.Uri+"/:id",e.HandleReadOne)
 	if !e.DisableWrites {
-		route = rest.Post(e.Uri, e.HandleCreate)
-		routes = append(routes, route)
-		route = rest.Post(e.Uri + "/:id", e.HandleUpdate)
-		routes = append(routes, route)
-		route = rest.Delete(e.Uri + "/:id", e.HandleDelete)
-		routes = append(routes, route)
-
-
-
+		r.POST(e.Uri,e.HandleCreate)
+		r.POST(e.Uri+"/:id",e.HandleUpdate)
+		r.DELETE(e.Uri+"/:id", e.HandleDelete)
 	}
-	return
 }
+
+
+
+
+// Register the endpoint to the http root handler. Use GetRouter() for more flexibility
+//func (e *Endpoint) Register(r *mux.Router) {
+//	e.registerRoutes(r)
+//}
 
 // Get the mux router that can be plugged in as an http handler.
 // Gives more flexibility than just using the Register() method which
@@ -186,13 +173,39 @@ func (e *Endpoint) GetJRouters()(routes []*rest.Route){
 //	}
 //
 //}
+
+//func methodsFromMethod(method string) []string {
+//	if method == "*" || method == "all" {
+//		return []string{"ReadOne", "ReadList", "Create", "Update", "Delete"}
+//	} else if method == "write" {
+//		return []string{"Create", "Update", "Delete"}
+//	} else if method == "read" {
+//		return []string{"ReadOne", "ReadList"}
+//	} else {
+//		return []string{method}
+//	}
+//}
+//func (e *Endpoint) SetMiddleware(method string, chain alice.Chain) *Endpoint {
+//	methods := methodsFromMethod(method)
+//	for _, m := range methods {
+//		switch m {
+//		case "ReadOne":
+//			e.Middleware.ReadOne = chain
+//		case "ReadList":
+//			e.Middleware.ReadList = chain
+//		case "Create":
+//			e.Middleware.Create = chain
+//		case "Update":
+//			e.Middleware.Update = chain
+//		case "Delete":
+//			e.Middleware.Delete = chain
 //
-//// Register the endpoint to the http root handler. Use GetRouter() for more flexibility
-//func (e *Endpoint) Register(r *mux.Router) {
-//	e.registerRoutes(r)
+//		}
+//	}
+//	return e
 //}
 
-func handleError(w http.ResponseWriter) {
+func handleError(c *gin.Context) {
 	var err error
 	if r := recover(); r != nil {
 		// panic(r)
@@ -209,27 +222,24 @@ func handleError(w http.ResponseWriter) {
 		} else {
 			err = errors.New(fmt.Sprint(r))
 		}
-
-		http.Error(w, NewErrorResponse(err).ToJSON(), 500)
-
+		OkJson(c,err)
 	}
 }
 
 // Handle a "ReadList" request, including parsing pagination, query string, etc
-func (e *Endpoint) HandleReadList(w1 rest.ResponseWriter, req *rest.Request) {
-	w:=w1.(http.ResponseWriter)
-	defer handleError(w)
+func (e *Endpoint) HandleReadList(c *gin.Context) {
+	w:=c.Writer.(http.ResponseWriter)
+	req:=c.Request
+	defer handleError(c)
 	w.Header().Set("Content-Type", "application/json")
 	var err error
-	var code int
+	//var code int
 
 	// Get the query
 	query, err := e.getQuery(req)
 
 	if err != nil {
-		w.WriteHeader(code)
-		io.WriteString(w, NewErrorResponse(err).ToJSON())
-
+		OkJson(c,err)
 		return
 	}
 
@@ -340,135 +350,87 @@ func (e *Endpoint) HandleReadList(w1 rest.ResponseWriter, req *rest.Request) {
 	}
 
 	httpResponse := &HTTPListResponse{pageInfo, response}
+	c.JSON(200,httpResponse)
 
-	encoder := ojson.NewEncoder(w)
-	err = encoder.Encode(httpResponse)
-
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		io.WriteString(w, NewErrorResponse(err).ToJSON())
-	}
+	//encoder := ojson.NewEncoder(w)
+	//err = encoder.Encode(httpResponse)
+	//if err != nil {
+	//	w.WriteHeader(http.StatusInternalServerError)
+	//	io.WriteString(w, NewErrorResponse(err).ToJSON())
+	//}
 }
 
-func (e *Endpoint) HandleReadOne(w1 rest.ResponseWriter, req *rest.Request) {
-	w:=w1.(http.ResponseWriter)
-	defer handleError(w)
-	w.Header().Set("Content-Type", "application/json")
+func (e *Endpoint) HandleReadOne(c *gin.Context) {
 
+	w:=c.Writer.(http.ResponseWriter)
+	//req:=c.Request
+	defer handleError(c)
 	var err error
 
-	// Step 1 - make sure provided ID is a valid mongo id hex
-//	vars := mux.Vars(req)
-//
-//	id := vars["id"]
-
-	id:=req.PathParam("id")
-
+	id:=c.Param("id")
 	if len(id) == 0 || !bson.IsObjectIdHex(id) {
 		http.Error(w, "Invalid object ID", http.StatusBadRequest)
 		return
 	}
-
-	// Execute the find
 	instance := e.Factory()
-
 	err = e.Connection.Collection(e.CollectionName).FindById(bson.ObjectIdHex(id), instance)
 
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		io.WriteString(w, NewErrorResponse(err).ToJSON())
+		OkJson(c,err)
 		return
 	}
+	c.JSON(200,instance)
 
-	httpResponse := &HTTPSingleResponse{instance}
-
-	encoder := ojson.NewEncoder(w)
-	err = encoder.Encode(httpResponse)
-
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		io.WriteString(w, NewErrorResponse(err).ToJSON())
-	}
+	//httpResponse := &HTTPSingleResponse{instance}
+	//encoder := ojson.NewEncoder(w)
+	//err = encoder.Encode(httpResponse)
+	//
+	//if err != nil {
+	//	w.WriteHeader(http.StatusInternalServerError)
+	//	io.WriteString(w, NewErrorResponse(err).ToJSON())
+	//}
 }
 
-func (e *Endpoint) HandleCreate(w1 rest.ResponseWriter, req *rest.Request) {
-	w:=w1.(http.ResponseWriter)
-	defer handleError(w)
-
-	w.Header().Set("Content-Type", "application/json")
-
+func (e *Endpoint) HandleCreate(c *gin.Context) {
+	req := c.Request
+	defer handleError(c)
 	var err error
-
-	// start := time.Now()
 
 	decoder := json.NewDecoder(req.Body)
 
 	obj := e.Factory()
-
 	// Instantiate diff tracker
 	if trackable, ok := obj.(bongo.Trackable); ok {
 		trackable.GetDiffTracker().Reset()
 	}
 
 	err = decoder.Decode(obj)
-
-	if err != nil {
-		if merr, ok := err.(*json.MultipleUnmarshalTypeError); ok {
-
-			w.WriteHeader(http.StatusBadRequest)
-			io.WriteString(w, NewMultiErrorResponse(merr.Errors).ToJSON())
-			return
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-			io.WriteString(w, NewErrorResponse(err).ToJSON())
-			return
+	if err == nil {
+		err = e.Connection.Collection(e.CollectionName).Save(obj)
+		if err == nil {
+			err = e.Connection.Collection(e.CollectionName).FindById(obj.GetId(), obj)
+			if err==nil{
+				c.JSON(201, obj)
+			}
 		}
-
 	}
-
-	err = e.Connection.Collection(e.CollectionName).Save(obj)
-
 	if err != nil {
-		if verr, ok := err.(*bongo.ValidationError); ok {
-			w.WriteHeader(http.StatusBadRequest)
-			errResponse := &HTTPErrorResponse{verr.Errors}
-			io.WriteString(w, errResponse.ToJSON())
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-			io.WriteString(w, NewErrorResponse(err).ToJSON())
-		}
-		return
+		OkJson(c, err)
 	}
-
-	e.Connection.Collection(e.CollectionName).FindById(obj.GetId(), obj)
-	httpResponse := &HTTPSingleResponse{obj}
-
-	encoder := ojson.NewEncoder(w)
-	w.WriteHeader(http.StatusCreated)
-	err = encoder.Encode(httpResponse)
-
-	if err != nil {
-		panic(err)
-	}
-
 }
 
-func (e *Endpoint) HandleUpdate(w1 rest.ResponseWriter, req *rest.Request) {
-	w:=w1.(http.ResponseWriter)
-	defer handleError(w)
+func (e *Endpoint) HandleUpdate(c *gin.Context) {
+	w:=c.Writer.(http.ResponseWriter)
+	//req:=c.Request
+	defer handleError(c)
 	w.Header().Set("Content-Type", "application/json")
 
 	var err error
 
-//	vars := mux.Vars(req)
-//
-//	id := vars["id"]
-
-	id:=req.PathParam("id")
+	id:=c.Param("id")
 
 	if len(id) == 0 || !bson.IsObjectIdHex(id) {
-		w.WriteHeader(http.StatusBadRequest)
-		io.WriteString(w, NewErrorResponse(errors.New("Invalid Object ID")).ToJSON())
+		OkJson(c,errors.New("Invalid Object ID:"+id))
 		return
 	}
 
@@ -477,8 +439,7 @@ func (e *Endpoint) HandleUpdate(w1 rest.ResponseWriter, req *rest.Request) {
 
 	err = e.Connection.Collection(e.CollectionName).FindById(bson.ObjectIdHex(id), instance)
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		io.WriteString(w, NewErrorResponse(err).ToJSON())
+		OkJson(c,err)
 		return
 	}
 
@@ -489,72 +450,43 @@ func (e *Endpoint) HandleUpdate(w1 rest.ResponseWriter, req *rest.Request) {
 	// Save the ID and reapply it afterward, so we do not allow the http request to modify the ID
 	actualId := instance.GetId()
 
-	decoder := json.NewDecoder(req.Body)
-	err = decoder.Decode(instance)
-
+	err=c.BindJSON(instance)
 	if err != nil {
-		if merr, ok := err.(*json.MultipleUnmarshalTypeError); ok {
-			w.WriteHeader(http.StatusBadRequest)
-			io.WriteString(w, NewMultiErrorResponse(merr.Errors).ToJSON())
-			return
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-			io.WriteString(w, NewErrorResponse(err).ToJSON())
-			return
-		}
-
-	}
-
-	instance.SetId(actualId)
-
-	if tt, ok := instance.(bongo.TimeTracker); ok {
-		tt.SetModified(time.Now())
-	}
-
-	err = e.Connection.Collection(e.CollectionName).Save(instance)
-
-	if err != nil {
-		if verr, ok := err.(*bongo.ValidationError); ok {
-			w.WriteHeader(http.StatusBadRequest)
-			errResponse := &HTTPErrorResponse{verr.Errors}
-			io.WriteString(w, errResponse.ToJSON())
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-			io.WriteString(w, NewErrorResponse(err).ToJSON())
-		}
+		OkJson(c,err)
 		return
 	}
-
-	httpResponse := &HTTPSingleResponse{instance}
-
-	encoder := ojson.NewEncoder(w)
-	err = encoder.Encode(httpResponse)
-
+	instance.SetId(actualId)
+	//if tt, ok := instance.( bongo.TimeModifiedTracker); ok {
+	//	tt.SetModified(time.Now())
+	//}
+	err = e.Connection.Collection(e.CollectionName).Save(instance)
 	if err != nil {
-		panic(err)
+		OkJson(c,err)
+		return
 	}
+	c.JSON(200,instance)
+
+	//httpResponse := &HTTPSingleResponse{instance}
+	//encoder := ojson.NewEncoder(w)
+	//err = encoder.Encode(httpResponse)
+	//
+	//if err != nil {
+	//	panic(err)
+	//}
 
 }
 
-func (e *Endpoint) HandleDelete(w1 rest.ResponseWriter, req *rest.Request) {
-	w:=w1.(http.ResponseWriter)
-	defer handleError(w)
-
+func (e *Endpoint) HandleDelete(c *gin.Context) {
+	//req:=c.Request
+	defer handleError(c)
 	var err error
 
-//	vars := mux.Vars(req)
-//
-//	id := vars["id"]
-
-	id:=req.PathParam("id")
+	id:=c.Param("id")
 
 	if len(id) == 0 || !bson.IsObjectIdHex(id) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		io.WriteString(w, NewErrorResponse(errors.New("Invalid Object ID")).ToJSON())
+		OkJson(c,errors.New("Invalid Object ID"))
 		return
 	}
-
 	// Execute the find
 	instance := e.Factory()
 
@@ -565,22 +497,10 @@ func (e *Endpoint) HandleDelete(w1 rest.ResponseWriter, req *rest.Request) {
 
 	err = collection.FindById(bson.ObjectIdHex(id), instance)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNotFound)
-		io.WriteString(w, NewErrorResponse(err).ToJSON())
+		OkJson(c,err)
 		return
 	}
-
 	err = collection.DeleteDocument(instance)
-
-	if err != nil {
-		// Make a new JSON e
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		io.WriteString(w, NewErrorResponse(err).ToJSON())
-		return
-	}else{
-		w1.WriteJson("ok")
-	}
+	OkJson(c,err)
 
 }

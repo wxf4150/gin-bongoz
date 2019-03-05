@@ -14,7 +14,7 @@ func TestDelete(t *testing.T) {
 	defer conn.Session.Close()
 
 	Convey("DELETE", t, func() {
-		endpoint := NewEndpoint("/api/pages", conn, "pages")
+		endpoint := NewEndpoint("/pages", conn, "pages")
 		Convey("Basic delete", func() {
 			endpoint.Factory = Factory
 

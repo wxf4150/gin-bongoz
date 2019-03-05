@@ -3,19 +3,19 @@ package bongoz
 import (
 //	"github.com/DailyFeats/dpl/models/traits"
 
-	"github.com/maxwellhealth/bongo"
+	"github.com/go-bongo/bongo"
 	"gopkg.in/mgo.v2/bson"
 	"net/http"
 	"time"
 	// "net/url"
 	"errors"
 	"reflect"
-	"github.com/ant0ine/go-json-rest/rest"
+	"github.com/gin-gonic/gin"
 )
 
 func getConnection() *bongo.Connection {
 	conf := &bongo.Config{
-		ConnectionString: "192.168.9.100",
+		ConnectionString: "localhost",
 		Database:         "bongoz",
 	}
 
@@ -28,23 +28,12 @@ func getConnection() *bongo.Connection {
 	return conn
 }
 func getHandler(endpoint *Endpoint)(http.Handler){
-	api := rest.NewApi()
-	router,err1 :=rest.MakeRouter(endpoint.GetJRouters()...)
-	if err1 != nil {
-		panic(err1)
-	}
-//	So(err1, ShouldEqual, nil)
-	api.SetApp(router)
-	handler:=api.MakeHandler()
-	return handler
+	router:=gin.Default()
+	rg:=router.Group("/api")
+	endpoint.Register(rg)
+	return router
 }
 
-func errorMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.Error(w, "Not Authorized", http.StatusUnauthorized)
-		// h.ServeHTTP(w, r)
-	})
-}
 
 type singleResponse struct {
 	Data map[string]interface{}

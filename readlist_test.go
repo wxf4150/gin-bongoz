@@ -21,7 +21,7 @@ func TestReadList(t *testing.T) {
 	defer conn.Session.Close()
 
 	Convey("ReadList", t, func() {
-		endpoint := NewEndpoint("/api/pages", conn, "pages")
+		endpoint := NewEndpoint("/pages", conn, "pages")
 		Convey("basic readlist", func() {
 			endpoint.Factory = Factory
 
@@ -54,7 +54,7 @@ func TestReadList(t *testing.T) {
 			So(response.Pagination.TotalPages, ShouldEqual, 1)
 			So(response.Pagination.RecordsOnPage, ShouldEqual, 2)
 			So(len(response.Data), ShouldEqual, 2)
-			So(response.Data[0]["content"], ShouldEqual, "foo")
+			So(response.Data[0]["Content"], ShouldEqual, "foo")
 		})
 		Convey("with query", func() {
 			endpoint.Factory = Factory
@@ -88,7 +88,7 @@ func TestReadList(t *testing.T) {
 			So(response.Pagination.TotalPages, ShouldEqual, 1)
 			So(response.Pagination.RecordsOnPage, ShouldEqual, 1)
 			So(len(response.Data), ShouldEqual, 1)
-			So(response.Data[0]["content"], ShouldEqual, "foo")
+			So(response.Data[0]["Content"], ShouldEqual, "foo")
 		})
 //		Convey("readlist with middleware", func() {
 //			endpoint.Factory = Factory

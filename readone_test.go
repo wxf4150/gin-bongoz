@@ -16,7 +16,7 @@ func TestReadOne(t *testing.T) {
 	defer conn.Session.Close()
 
 	Convey("ReadOne", t, func() {
-		endpoint := NewEndpoint("/api/pages", conn, "pages")
+		endpoint := NewEndpoint("/pages", conn, "pages")
 		Convey("basic", func() {
 			endpoint.Factory = Factory
 			//			router := endpoint.GetRouter()
@@ -41,17 +41,17 @@ func TestReadOne(t *testing.T) {
 			//			router.ServeHTTP(w, req)
 			handler.ServeHTTP(w,req)
 
-			response := &singleResponse{}
+			response := map[string]interface{}{}
 
 			So(w.Code, ShouldEqual, 200)
-			err := json.Unmarshal(w.Body.Bytes(), response)
+			err := json.Unmarshal(w.Body.Bytes(), &response)
 
 			So(err, ShouldEqual, nil)
 
-			So(response.Data["content"], ShouldEqual, "foo")
+			So(response["Content"], ShouldEqual, "foo")
 		})
 		Reset(func() {
-			conn.Session.DB("dplservertest").DropDatabase()
+			conn.Session.DB("bongoz").DropDatabase()
 
 		})
 	})

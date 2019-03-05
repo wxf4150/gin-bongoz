@@ -15,7 +15,7 @@ func TestCreate(t *testing.T) {
 	defer conn.Session.Close()
 
 	Convey("POST", t, func() {
-		endpoint := NewEndpoint("/api/pages", conn, "pages")
+		endpoint := NewEndpoint("/pages", conn, "pages")
 
 		Convey("Basic create", func() {
 			endpoint.Factory = Factory
@@ -28,15 +28,16 @@ func TestCreate(t *testing.T) {
 			req, _ := http.NewRequest("POST", "/api/pages", reader)
 			handler.ServeHTTP(w, req)
 
-			response := &singleResponse{}
+			response := map[string]interface{}{}
 			So(w.Code, ShouldEqual, 201)
-			err := json.Unmarshal(w.Body.Bytes(), response)
-
+			err := json.Unmarshal(w.Body.Bytes(), &response)
+			t.Log(string(w.Body.Bytes()))
 			So(err, ShouldEqual, nil)
 
-			So(response.Data["content"], ShouldEqual, "foo")
-			So(response.Data["_id"], ShouldEqual, "540e05189b2212ee6b1f44d3")
+			So(response["Content"], ShouldEqual, "foo")
+			So(response["_id"], ShouldEqual, "540e05189b2212ee6b1f44d3")
 		})
+
 
 		Convey("Create with validation errors", func() {
 			endpoint.Factory = ValidFactory
@@ -56,11 +57,8 @@ func TestCreate(t *testing.T) {
 			reader := strings.NewReader(string(marshaled))
 			req, _ := http.NewRequest("POST", "/api/pages", reader)
 			handler.ServeHTTP(w, req)
-
-			So(w.Code, ShouldEqual, 400)
-			So(w.Body.String(), ShouldEqual, "{\"errors\":[\"Content is required\"]}")
+			So(w.Code, ShouldEqual, 500)
 		})
-
 		Reset(func() {
 			conn.Session.DB("bongoz").DropDatabase()
 		})

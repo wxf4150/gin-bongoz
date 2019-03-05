@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"github.com/ant0ine/go-json-rest/rest"
+	"net/http"
 )
 
 func addIntToQuery(query bson.M, param string, modifier string, value string) {
@@ -100,7 +100,7 @@ func checkForObjectIdAndAddToQuery(instance interface{}, property string, key st
 
 }
 
-func (e *Endpoint) getQuery(req *rest.Request) (bson.M, error) {
+func (e *Endpoint) getQuery(req *http.Request) (bson.M, error) {
 	query := req.URL.Query()
 
 	q := bson.M{}
