@@ -1,9 +1,10 @@
 
- mongodb ODM for go-json-rest   https://github.com/ant0ine/go-json-rest
+ mongodb ODM for gin
 
 
  modify from  https://github.com/maxwellhealth/bongoz
 
+[![Build Status](https://travis-ci.com/wxf4150/gin-bongoz.svg?branch=master)](https://travis-ci.com/wxf4150/gin-bongoz)
 
 ***sorry  for my bad english!***
 
