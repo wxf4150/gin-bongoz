@@ -1,11 +1,12 @@
 
- mongodb ODM for gin
+mongodb ODM for gin
 
+modify from  https://github.com/maxwellhealth/bongoz
 
- modify from  https://github.com/maxwellhealth/bongoz
+[![Build Status](https://travis-ci.org/wxf4150/gin-bongoz.svg?branch=master)](https://travis-ci.org/wxf4150/gin-bongoz)
 
-[![Build Status](https://travis-ci.com/wxf4150/gin-bongoz.svg?branch=master)](https://travis-ci.com/wxf4150/gin-bongoz)
 [![Coverage Status](https://coveralls.io/repos/github/wxf4150/gin-bongoz/badge.svg?branch=master)](https://coveralls.io/github/wxf4150/gin-bongoz?branch=master)
+
 ***sorry  for my bad english!***
 
 
