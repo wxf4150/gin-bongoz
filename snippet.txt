@@ -1,0 +1,83 @@
+import "github.com/go-bongo/bongo"
+
+//  // snippet key gbzdt  (gin bongoz doc-swagger template snippet)
+// //swagger docs 
+
+
+func initRouter(){
+    router:=gin.Default()
+	rg:=router.Group("$apiroot$")
+	rg.GET("/$StructName$s", controls.$StructName$GetListHandler)
+	rg.GET("/$StructName$s/:id", controls.$StructName$GetHandler)
+	rg.POST("/$StructName$s", controls.$StructName$CreateHandler)
+	rg.POST("/$StructName$s/:id", controls.$StructName$UpdateHandler)
+}
+
+// @Summary　$StructDes$添加
+// @Description $StructDes$添加
+// @ID $StructName$CreateHandler
+// @Accept  json
+// @Produce  json
+// @Param   token     header    string true "token header"
+// @Param   model     body    dao.$StructName$ true "modle_create json"
+// @Success 200 {object} dao.$StructName$	"user json"
+// @Failure 500 {object} controls.ApiErr "err obj"
+// @Failure 401 {object} controls.ApiErr "err obj"
+// @Router $apiroot$/$StructName$s [post]
+func $StructName$CreateHandler(c *gin.Context) {
+
+}
+
+
+// @Summary　$StructDes$修改
+// @Description $StructDes$修改
+// @ID $StructName$UpdateHandler
+// @Accept  json
+// @Produce  json
+// @Param   token     header    string true "tokenstr"
+// @Param   model     body    dao.$StructName$ true "modle_create json"
+// @Success 200 {object} dao.$StructName$	"user json"
+// @Failure 500 {object} controls.ApiErr "err obj"
+// @Failure 401 {object} controls.ApiErr "err obj"
+// @Router $apiroot$/$StructName$s/{id} [post]
+func $StructName$UpdateHandler(c *gin.Context) {
+
+}
+
+
+// @Summary　按id 查询$StructDes$
+// @Description 按id 查询$StructDes$
+// @ID $StructName$GetHandler
+// @Accept  json
+// @Produce  json
+// @Param   token     header    string true "tokenstr"
+// @Param   id     path    string true "$StructDes$ objectid"
+// @Success 200 {object} dao.$StructName$	"user json"
+// @Failure 500 {object} controls.ApiErr "err obj"
+// @Failure 401 {object} controls.ApiErr "err obj"
+// @Router $apiroot$/$StructName$s/{id} [get]
+func $StructName$GetHandler(c *gin.Context) {
+
+}
+
+
+type $StructName$ListModel struct {
+	Pagination *bongo.PaginationInfo
+	Data       []dao.$StructName$
+}
+// @Summary　$StructDes$列表查询
+// @Description $StructDes$列表查询. 支持的条件格式见：https://github.com/wxf4150/gin-bongoz
+// @ID $StructName$GetListHandler
+// @Accept  json
+// @Produce  json
+// @Param   token     header    string true "tokenstr"
+// @Param   id     query    string false "$StructDes$ objectid"
+// @Param   status     query    string false "$StructDes$ status"
+// @Param   _query     query    string false "mongo查询对象，支持的条件格式见：https://github.com/wxf4150/gin-bongoz"
+// @Success 200 {object} controls.$StructName$ListModel	"user json"
+// @Failure 500 {object} controls.ApiErr "err obj"
+// @Failure 401 {object} controls.ApiErr "err obj"
+// @Router $apiroot$/$StructName$s [get]
+func $StructName$GetListHandler(c *gin.Context) {
+
+}

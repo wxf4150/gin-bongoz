@@ -57,48 +57,6 @@ type HTTPSingleResponse struct {
 	Data interface{}
 }
 
-type HTTPErrorResponse struct {
-	Errors []error
-}
-
-func NewErrorResponse(err error) *HTTPErrorResponse {
-
-	return &HTTPErrorResponse{[]error{err}}
-}
-
-func (e *HTTPErrorResponse) ToJSON() string {
-
-	errs := make([]string, len(e.Errors))
-	for i, err := range e.Errors {
-		errs[i] = err.Error()
-	}
-	mp := map[string]interface{}{
-		"errors": errs,
-	}
-
-	marshaled, _ := json.Marshal(mp)
-	return string(marshaled)
-
-}
-
-type HTTPMultiErrorResponse struct {
-	Errors []string
-}
-
-func NewMultiErrorResponse(errs []error) *HTTPMultiErrorResponse {
-	// This is only from json unmarshal
-	parsed := make([]string, len(errs))
-
-	for i, e := range errs {
-		parsed[i] = e.Error()
-	}
-	return &HTTPMultiErrorResponse{parsed}
-}
-
-func (e *HTTPMultiErrorResponse) ToJSON() string {
-	marshaled, _ := json.Marshal(e)
-	return string(marshaled)
-}
 
 type ModelFactory func() bongo.Document
 
@@ -420,10 +378,9 @@ func (e *Endpoint) HandleCreate(c *gin.Context) {
 }
 
 func (e *Endpoint) HandleUpdate(c *gin.Context) {
-	w:=c.Writer.(http.ResponseWriter)
+	//w:=c.Writer.(http.ResponseWriter)
 	//req:=c.Request
 	defer handleError(c)
-	w.Header().Set("Content-Type", "application/json")
 
 	var err error
 
