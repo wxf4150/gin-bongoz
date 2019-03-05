@@ -1,6 +1,4 @@
 language: go
-service_name: travis-pro
-repo_token: BuV1p0nLOs0ExkmD50v8tErzBrzuCNi5T
 services:
   - mongodb
 go:
@@ -13,4 +11,4 @@ install:
   - go get github.com/mattn/goveralls
   - if ! go get code.google.com/p/go.tools/cmd/cover; then go get golang.org/x/tools/cmd/cover; fi
 script:
-  - $GOPATH/bin/goveralls -service=travis-pro
+  - $GOPATH/bin/goveralls -service=travis-cli
