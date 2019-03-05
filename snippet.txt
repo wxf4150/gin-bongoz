@@ -1,4 +1,9 @@
+package controls
+import	 "github.com/gin-gonic/gin"
+import	"github.com/wxf4150/gin-bongoz"
+import "./dao"
 import "github.com/go-bongo/bongo"
+
 
 //  // snippet key gbzdt  (gin bongoz doc-swagger template snippet)
 // //swagger docs 
@@ -6,11 +11,19 @@ import "github.com/go-bongo/bongo"
 
 func initRouter(){
     router:=gin.Default()
+    //move to main.go
 	rg:=router.Group("$apiroot$")
-	rg.GET("/$StructName$s", controls.$StructName$GetListHandler)
-	rg.GET("/$StructName$s/:id", controls.$StructName$GetHandler)
-	rg.POST("/$StructName$s", controls.$StructName$CreateHandler)
-	rg.POST("/$StructName$s/:id", controls.$StructName$UpdateHandler)
+	endpoint := bongoz.NewEndpoint("/$StructName$s", mgoConn, "pages")
+	endpoint.Factory=func () bongo.Document {
+             	return &dao.$StructName${}
+             }
+	endpoint.Register(rg)
+}
+
+//move to dao
+type $StructName$ListModel struct {
+	*bongo.PaginationInfo
+	Data       []$StructName$
 }
 
 // @Summary　$StructDes$添加
@@ -61,10 +74,6 @@ func $StructName$GetHandler(c *gin.Context) {
 }
 
 
-type $StructName$ListModel struct {
-	Pagination *bongo.PaginationInfo
-	Data       []dao.$StructName$
-}
 // @Summary　$StructDes$列表查询
 // @Description $StructDes$列表查询. 支持的条件格式见：https://github.com/wxf4150/gin-bongoz
 // @ID $StructName$GetListHandler
@@ -74,7 +83,7 @@ type $StructName$ListModel struct {
 // @Param   id     query    string false "$StructDes$ objectid"
 // @Param   status     query    string false "$StructDes$ status"
 // @Param   _query     query    string false "mongo查询对象，支持的条件格式见：https://github.com/wxf4150/gin-bongoz"
-// @Success 200 {object} controls.$StructName$ListModel	"user json"
+// @Success 200 {object} dao.$StructName$ListModel	"list json"
 // @Failure 500 {object} controls.ApiErr "err obj"
 // @Failure 401 {object} controls.ApiErr "err obj"
 // @Router $apiroot$/$StructName$s [get]
