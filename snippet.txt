@@ -1,30 +1,44 @@
 package controls
-import	 "github.com/gin-gonic/gin"
-import	"github.com/wxf4150/gin-bongoz"
-import "./dao"
-import "github.com/go-bongo/bongo"
 
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/wxf4150/gin-bongoz"
+	"github.com/go-bongo/bongo"
+	"capi/utils"
+)
 
 //  // snippet key gbzdt  (gin bongoz doc-swagger template snippet)
-// //swagger docs 
+// //swagger docs
 
+var collectionName="$StructName$s"
+var mgo$StructName$=utils.Mconn.C(collectionName)
+var bgo$StructName$=utils.Bconn.Collection(collectionName)
 
-func initRouter(){
-    router:=gin.Default()
-    //move to main.go
-	rg:=router.Group("$apiroot$")
-	endpoint := bongoz.NewEndpoint("/$StructName$s", mgoConn, "pages")
+//move to main.go
+//controls.AddBlogRouter(router,"$apiroot$")
+
+func Add$StructName$Router(router *gin.Engine,rootpath string ){
+	//rootpath:="$apiroot$"
+	rg:=router.Group(rootpath)
+	endpoint := bongoz.NewEndpoint("/$StructName$s", utils.Bconn, collectionName)
 	endpoint.Factory=func () bongo.Document {
-             	return &dao.$StructName${}
+             	return &$StructName${}
              }
+	endpoint.QueryParams=[]string{"status","_id"}
+	endpoint.AllowFullQuery=true
 	endpoint.Register(rg)
 }
-
-//move to dao
+type $StructName$ struct {
+	bongo.DocumentBase `bson:",inline"`
+	Name   string      `bson:",omitempty" example:"科技园"`
+	BossID string      `bson:",omitempty" example:"李四"`
+	Status int         `bson:",omitempty" example:"1"`
+}
 type $StructName$ListModel struct {
 	*bongo.PaginationInfo
 	Data       []$StructName$
 }
+
 
 // @Summary　$StructDes$添加
 // @Description $StructDes$添加
@@ -32,8 +46,8 @@ type $StructName$ListModel struct {
 // @Accept  json
 // @Produce  json
 // @Param   token     header    string true "token header"
-// @Param   model     body    dao.$StructName$ true "modle_create json"
-// @Success 200 {object} dao.$StructName$	"user json"
+// @Param   model     body    controls.$StructName$ true "modle_create json"
+// @Success 200 {object} controls.$StructName$	"user json"
 // @Failure 500 {object} controls.ApiErr "err obj"
 // @Failure 401 {object} controls.ApiErr "err obj"
 // @Router $apiroot$/$StructName$s [post]
@@ -48,8 +62,8 @@ func $StructName$CreateHandler(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param   token     header    string true "tokenstr"
-// @Param   model     body    dao.$StructName$ true "modle_create json"
-// @Success 200 {object} dao.$StructName$	"user json"
+// @Param   model     body    controls.$StructName$ true "modle_create json"
+// @Success 200 {object} controls.$StructName$	"user json"
 // @Failure 500 {object} controls.ApiErr "err obj"
 // @Failure 401 {object} controls.ApiErr "err obj"
 // @Router $apiroot$/$StructName$s/{id} [post]
@@ -65,7 +79,7 @@ func $StructName$UpdateHandler(c *gin.Context) {
 // @Produce  json
 // @Param   token     header    string true "tokenstr"
 // @Param   id     path    string true "$StructDes$ objectid"
-// @Success 200 {object} dao.$StructName$	"user json"
+// @Success 200 {object} controls.$StructName$	"user json"
 // @Failure 500 {object} controls.ApiErr "err obj"
 // @Failure 401 {object} controls.ApiErr "err obj"
 // @Router $apiroot$/$StructName$s/{id} [get]
@@ -80,10 +94,9 @@ func $StructName$GetHandler(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param   token     header    string true "tokenstr"
-// @Param   id     query    string false "$StructDes$ objectid"
 // @Param   status     query    string false "$StructDes$ status"
-// @Param   _query     query    string false "mongo查询对象，支持的条件格式见：https://github.com/wxf4150/gin-bongoz"
-// @Success 200 {object} dao.$StructName$ListModel	"list json"
+// @Param   _query     query    string false "mongo查询对象 如{status:2}，支持的条件格式见：https://github.com/wxf4150/gin-bongoz"
+// @Success 200 {object} controls.$StructName$ListModel	"list json"
 // @Failure 500 {object} controls.ApiErr "err obj"
 // @Failure 401 {object} controls.ApiErr "err obj"
 // @Router $apiroot$/$StructName$s [get]
