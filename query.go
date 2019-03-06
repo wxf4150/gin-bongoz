@@ -94,6 +94,9 @@ func checkForObjectIdAndAddToQuery(instance interface{}, property string, key st
 			log.Fatal("Could not parse value as []string", value)
 			return
 		}
+	} else if strings.HasPrefix(t,"int") || strings.HasPrefix(t,"uint") {
+		tint,_:=strconv.Atoi(value.(string))
+		query[key] =tint
 	} else {
 		query[key] = value
 	}
@@ -144,6 +147,7 @@ func (e *Endpoint) getQuery(req *http.Request) (bson.M, error) {
 			}
 		}
 	}
+	log.Printf("bongoz raw Urlquery %s  parsed: %#v",req.URL.RawQuery,q)
 
 	return q, nil
 }
