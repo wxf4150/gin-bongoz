@@ -3,8 +3,8 @@ package bongoz
 import (
 //	"github.com/DailyFeats/dpl/models/traits"
 
-	"github.com/go-bongo/bongo"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/wxf4150/gin-bongoz/bongo"
+	"github.com/globalsign/mgo/bson"
 	"net/http"
 	"time"
 	// "net/url"

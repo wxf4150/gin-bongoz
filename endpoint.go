@@ -3,7 +3,7 @@ package bongoz
 import (
 	"errors"
 	"fmt"
-	"github.com/go-bongo/bongo"
+	"github.com/wxf4150/gin-bongoz/bongo"
 	"github.com/globalsign/mgo/bson"
 	"net/http"
 	"strconv"
