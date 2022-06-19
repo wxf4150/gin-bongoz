@@ -2,7 +2,7 @@ package bongoz
 
 import (
 	"encoding/json"
-	"github.com/go-bongo/bongo"
+	"github.com/wxf4150/gin-bongoz/bongo"
 	. "github.com/smartystreets/goconvey/convey"
 	"net/http"
 	"net/http/httptest"
